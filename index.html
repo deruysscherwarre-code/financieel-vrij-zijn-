@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIRE Strategie — Optimaal Advies</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2eb;
+  --white: #fdfcf9;
+  --ink: #1a1a1a;
+  --ink-mid: #3d3d3d;
+  --ink-light: #888;
+  --border: #d8d2c5;
+  --green: #0f7a5a;
+  --green-light: #e8f4ef;
+  --green-mid: #1aab7e;
+  --amber: #c87800;
+  --amber-light: #fdf3e0;
+  --red: #c0392b;
+  --red-light: #fdecea;
+  --blue: #1a4f8a;
+  --blue-light: #e8eef7;
+  --serif: 'Playfair Display', Georgia, serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 28px 80px;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  border-top: 4px solid var(--ink);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 0 24px;
+  margin-bottom: 44px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 24px;
+}
+.masthead-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+.masthead h1 {
+  font-family: var(--serif);
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1.0;
+  color: var(--ink);
+  letter-spacing: -1px;
+}
+.masthead h1 em {
+  font-style: italic;
+  color: var(--green);
+}
+.masthead-sub {
+  font-size: 13px;
+  color: var(--ink-light);
+  margin-top: 10px;
+  font-family: var(--sans);
+  font-weight: 300;
+}
+.masthead-verdict {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.verdict-label { color: var(--ink-light); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; }
+.verdict-value {
+  font-size: 42px;
+  font-weight: 600;
+  color: var(--green);
+  line-height: 1;
+  margin: 4px 0;
+}
+.verdict-sub { color: var(--ink-light); font-size: 10px; }
+
+/* ── SCENARIO CARDS ── */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 40px;
+}
+.sc-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 18px;
+  position: relative;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.sc-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.sc-card.winner {
+  border-color: var(--green);
+  border-width: 2px;
+  background: var(--green-light);
+}
+.sc-card.winner::after {
+  content: '★ OPTIMAAL';
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+.sc-letter {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 6px;
+}
+.sc-title {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+.sc-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.sc-key { font-size: 10px; color: var(--ink-light); font-family: var(--mono); }
+.sc-val { font-size: 13px; font-weight: 500; font-family: var(--mono); }
+.fire-age {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--green);
+  line-height: 1;
+  margin: 10px 0 4px;
+}
+.fire-age-label { font-size: 10px; color: var(--ink-light); font-family: var(--mono); letter-spacing: 0.1em; }
+.gain-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-top: 10px;
+  border-radius: 2px;
+}
+.gain-green { background: var(--green-light); color: var(--green); }
+.gain-amber { background: var(--amber-light); color: var(--amber); }
+.gain-red { background: var(--red-light); color: var(--red); }
+.gain-blue { background: var(--blue-light); color: var(--blue); }
+
+/* ── CHART SECTION ── */
+.chart-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+.panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 22px;
+}
+.panel-head {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chart-wrap { position: relative; height: 280px; }
+
+/* ── MOVES ── */
+.section-title {
+  font-family: var(--serif);
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--ink);
+  margin-bottom: 6px;
+  border-top: 3px double var(--border);
+  padding-top: 20px;
+}
+.section-sub {
+  color: var(--ink-light);
+  font-size: 12px;
+  margin-bottom: 24px;
+  font-family: var(--sans);
+  font-weight: 300;
+}
+
+.moves-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.move-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--green);
+  padding: 20px 22px;
+}
+.move-card.amber { border-left-color: var(--amber); }
+.move-card.blue { border-left-color: var(--blue); }
+.move-card.red { border-left-color: var(--red); }
+.move-number {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-light);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.move-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.move-body {
+  font-size: 13px;
+  color: var(--ink-mid);
+  margin-bottom: 12px;
+  line-height: 1.6;
+  font-weight: 300;
+}
+.move-impact {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  display: inline-block;
+  border-radius: 2px;
+}
+.impact-green { background: var(--green-light); color: var(--green); }
+.impact-amber { background: var(--amber-light); color: var(--amber); }
+.impact-blue { background: var(--blue-light); color: var(--blue); }
+
+.move-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 12px;
+  color: var(--ink-light);
+  font-family: var(--mono);
+}
+
+/* ── REALITY CHECK ── */
+.reality-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.reality-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  padding: 18px;
+}
+.reality-icon { font-size: 24px; margin-bottom: 10px; }
+.reality-head {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.reality-body {
+  font-size: 12px;
+  color: var(--ink-mid);
+  font-weight: 300;
+  line-height: 1.6;
+}
+.reality-score {
+  margin-top: 12px;
+  display: flex;
+  gap: 3px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+.dot.filled { background: var(--green); }
+.dot.half { background: var(--amber); }
+
+/* ── RISK TABLE ── */
+.risk-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 40px;
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+.risk-table th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--ink-light);
+}
+.risk-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  font-size: 13px;
+}
+.risk-table tr:last-child td { border-bottom: none; }
+.risk-label {
+  font-weight: 500;
+  color: var(--ink);
+}
+.risk-desc { color: var(--ink-mid); font-size: 12px; font-weight: 300; }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.tag-high { background: var(--red-light); color: var(--red); }
+.tag-med { background: var(--amber-light); color: var(--amber); }
+.tag-low { background: var(--green-light); color: var(--green); }
+
+/* ── FOOTER SUMMARY ── */
+.summary-box {
+  background: var(--ink);
+  color: var(--white);
+  padding: 32px 36px;
+  margin-top: 8px;
+}
+.summary-box .sum-head {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 20px;
+}
+.sum-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.sum-col-title { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #888; margin-bottom: 10px; }
+.sum-item {
+  font-size: 12px;
+  color: #ccc;
+  padding: 5px 0;
+  border-bottom: 1px solid #333;
+  display: flex;
+  gap: 8px;
+  font-weight: 300;
+  font-family: var(--sans);
+}
+.sum-item strong { color: #fff; font-weight: 500; }
+.check { color: var(--green-mid); flex-shrink: 0; }
+.cross { color: #f4645f; flex-shrink: 0; }
+
+/* ── PROGRESS ── */
+.progress-wrap { margin-top: 8px; }
+.progress-bar { height: 3px; background: var(--border); border-radius: 1px; overflow: hidden; margin-top: 4px; }
+.progress-fill { height: 100%; border-radius: 1px; }
+
+/* ── TIMELINE STRIP ── */
+.timeline-strip {
+  display: flex;
+  gap: 0;
+  margin-bottom: 40px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: var(--white);
+}
+.ts-item {
+  flex: 1;
+  min-width: 100px;
+  padding: 14px 14px;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.ts-item:last-child { border-right: none; }
+.ts-item.active { background: var(--green-light); }
+.ts-age { font-family: var(--mono); font-size: 18px; font-weight: 600; color: var(--green); }
+.ts-label { font-size: 11px; font-weight: 500; color: var(--ink); margin: 2px 0; }
+.ts-detail { font-size: 10px; color: var(--ink-light); font-weight: 300; }
+.ts-arrow {
+  position: absolute;
+  right: -8px; top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  color: var(--green);
+  font-size: 14px;
+}
+
+@media (max-width: 750px) {
+  .scenario-grid { grid-template-columns: 1fr 1fr; }
+  .chart-section { grid-template-columns: 1fr; }
+  .moves-grid { grid-template-columns: 1fr; }
+  .reality-grid { grid-template-columns: 1fr; }
+  .sum-cols { grid-template-columns: 1fr; }
+  .masthead { grid-template-columns: 1fr; }
+  .masthead h1 { font-size: 36px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div>
+    <div class="masthead-eyebrow">FIRE Strategie · Persoonlijk Financieel Advies · IT-Carrière</div>
+    <h1>Wanneer kan jij<br><em>financieel vrij</em> zijn?</h1>
+    <div class="masthead-sub">4 scenario's doorgerekend · Optimale moves geïdentificeerd · Eerlijke realiteitscheck</div>
+  </div>
+  <div class="masthead-verdict">
+    <div class="verdict-label">Optimale FIRE-leeftijd</div>
+    <div class="verdict-value">44</div>
+    <div class="verdict-sub">Scenario D · Portfolio €973k</div>
+    <div style="margin-top:8px; font-size:10px; color:var(--green); font-family:var(--mono);">8 jaar vroeger dan basis</div>
+  </div>
+</div>
+
+<!-- SCENARIO CARDS -->
+<div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-light);margin-bottom:12px;">Scenario vergelijking — FIRE target = €900k (25× €36k/jaar leefkosten)</div>
+<div class="scenario-grid" id="scenarioGrid">
+  <!-- filled by JS -->
+</div>
+
+<!-- CHART + FIRE NUMBER -->
+<div class="chart-section">
+  <div class="panel">
+    <div class="panel-head">
+      <span>Portfolio groei alle scenario's (leeftijd 25–55)</span>
+      <span style="font-size:10px;color:var(--green);">€900k = FIRE lijn</span>
+    </div>
+    <div class="chart-wrap"><canvas id="chartCompare"></canvas></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">Impact per move op FIRE-leeftijd</div>
+    <div class="chart-wrap" style="height:280px;"><canvas id="chartImpact"></canvas></div>
+  </div>
+</div>
+
+<!-- OPTIMAL TIMELINE -->
+<div style="font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-light);margin-bottom:12px;">Optimale tijdlijn — Scenario D</div>
+<div class="timeline-strip">
+  <div class="ts-item">
+    <div class="ts-age">21</div>
+    <div class="ts-label">Start</div>
+    <div class="ts-detail">€15k · 80% investeren</div>
+  </div>
+  <div class="ts-item active">
+    <div class="ts-age">23</div>
+    <div class="ts-label">€60k bereikt</div>
+    <div class="ts-detail">Doorsparen loont!</div>
+  </div>
+  <div class="ts-item active">
+    <div class="ts-age">27</div>
+    <div class="ts-label">🏠 Huis kopen</div>
+    <div class="ts-detail">Portfolio €189k · inbreng €60k · €129k blijft</div>
+  </div>
+  <div class="ts-item active">
+    <div class="ts-age">30</div>
+    <div class="ts-label">⚡ Freelance</div>
+    <div class="ts-detail">€4.500/m → €17k/j extra investering</div>
+  </div>
+  <div class="ts-item active">
+    <div class="ts-age">35</div>
+    <div class="ts-label">Top freelance</div>
+    <div class="ts-detail">€5.500/m · Portfolio €370k</div>
+  </div>
+  <div class="ts-item active">
+    <div class="ts-age">40</div>
+    <div class="ts-label">Vermogend</div>
+    <div class="ts-detail">Portfolio €665k · snowball volop</div>
+  </div>
+  <div class="ts-item" style="background:var(--green);border-color:var(--green);">
+    <div class="ts-age" style="color:#fff;">44</div>
+    <div class="ts-label" style="color:#fff;font-weight:700;">🎉 FIRE!</div>
+    <div class="ts-detail" style="color:rgba(255,255,255,0.75);">Portfolio €973k · 4% = €38k/j</div>
+  </div>
+  <div class="ts-item">
+    <div class="ts-age">50</div>
+    <div class="ts-label">Hypotheek klaar</div>
+    <div class="ts-detail">Kosten dalen · Portfolio groeit door</div>
+  </div>
+</div>
+
+<!-- MOVES -->
+<div class="section-title">De 5 slimste moves</div>
+<div class="section-sub">Gerangschikt op impact op FIRE-leeftijd · Concrete actiepunten per move</div>
+
+<div class="moves-grid">
+
+  <div class="move-card">
+    <div class="move-number">MOVE 01 · HOOGSTE IMPACT</div>
+    <div class="move-title">2 jaar langer thuis wonen (tot 27)</div>
+    <div class="move-body">
+      Dit is <strong>de meest impactvolle move</strong> in je plan. Elke maand thuis = €1.760+ wordt geïnvesteerd i.p.v. opgegeten door huur of hypotheeklasten. Op 25 heb je €121k — op 27 heb je <strong>€189k</strong>. Dat is €68k extra. Na aftrek inbreng blijft er €129k in je ETF versus €61k. Dat verschil groeit exponentieel dankzij rente-op-rente over 17+ jaar.
+    </div>
+    <span class="move-impact impact-green">+2 jaar ETF groei = €68k extra startkapitaal na huis</span>
+    <div class="move-detail">
+      Concretely: €129k ETF bij aankoop vs €61k = 2x meer compound base · Over 17j @ 7% = verschil van €220k+ op FIRE-moment
+    </div>
+  </div>
+
+  <div class="move-card amber">
+    <div class="move-number">MOVE 02 · HOGE IMPACT</div>
+    <div class="move-title">Freelance gaan op 30 i.p.v. 35</div>
+    <div class="move-body">
+      Als loondienst specialist op 30 verdien je €3.800/m. Als freelancer met 9 jaar IT-ervaring is <strong>€75–100 per uur realistisch</strong>, wat uitkomt op €4.500–5.000 netto/m. Dat is €700–1.200/m meer. Dit lijkt klein maar die extra investering van ~€10k/jaar gedurende 5 jaar extra is bij 40 al €70k meer portfolio — dankzij compound. Dit is de op één na beste zet.
+    </div>
+    <span class="move-impact impact-amber">5 jaar vroeger freelance = FIRE 4 jaar eerder</span>
+    <div class="move-detail">
+      Dagrate €350–450 · 220 werkdagen · bruto €77–99k · netto €4.200–5.000/m als zelfstandige na aftrek sociale bijdragen
+    </div>
+  </div>
+
+  <div class="move-card blue">
+    <div class="move-number">MOVE 03 · MIDDELHOGE IMPACT</div>
+    <div class="move-title">Niche specialisatie vóór je 28e</div>
+    <div class="move-body">
+      Generieke IT'ers verdienen €3.800/m op 30. <strong>Niche experts</strong> (cloud architect, security, AI/ML, ERP-consultant) verdienen €5.000–6.500/m als freelancer op 30. Het loont enorm om vóór je 28e te kiezen voor een specialisatie met hoge marktvraag. 1 cursus, 1 certificering (AWS, Azure, GCP, SAP) kan je dagrate met €50–150 verhogen.
+    </div>
+    <span class="move-impact impact-blue">+€500/m extra = €6k/j meer investering = FIRE 2 jaar vroeger</span>
+    <div class="move-detail">
+      AWS Solutions Architect cert: 3 maanden voorbereiding · dagrate +€50–100 · ROI in maand 2 al terugverdiend
+    </div>
+  </div>
+
+  <div class="move-card">
+    <div class="move-number">MOVE 04 · MIDDELHOGE IMPACT</div>
+    <div class="move-title">Kosten streng bewaken na huisaankoop</div>
+    <div class="move-body">
+      De gevaarlijkste periode is <strong>leeftijd 27–32</strong>: je hebt een huis, je verdient meer, en levensstijlcreep loert. Elke €200/m extra uitgave (betere auto, city trip extra, restaurant frequenter) kost je op 44 grofweg <strong>€40.000 portfolio</strong> dankzij de compound factor. Budget bewust leven betekent niet gierig zijn — het betekent doelgericht zijn.
+    </div>
+    <span class="move-impact impact-green">Geen lifestyle creep = €150–200k extra op FIRE-moment</span>
+    <div class="move-detail">
+      Praktisch: maandelijkse budgetcheck · auto max €15k · vakanties €2.500/j · investeren voor elke salarisverhoging direct automatiseren
+    </div>
+  </div>
+
+  <div class="move-card amber">
+    <div class="move-number">MOVE 05 · LAGE MAAR ZEKERE IMPACT</div>
+    <div class="move-title">Huis als dubbele asset benutten</div>
+    <div class="move-body">
+      Je huis is niet alleen woonst — het is ook <strong>collateral en vermogensopbouw</strong>. Een kamer verhuren (€400–600/m) levert je €5k–7k/jaar netto op, volledig investeerbaar. Als je huis stijgt naar €450k en je herfinanciert op 40, kun je €50–80k vrijmaken voor extra ETF-inleg of een vastgoedinvestering. In België/Mechelen is vastgoedinflatie historisch ~3–4%/jaar.
+    </div>
+    <span class="move-impact impact-amber">Kamer verhuren = €5k/j extra → FIRE 1–2 jaar vroeger</span>
+    <div class="move-detail">
+      Alternatief: AirBnB kamer in Mechelen op weekends · ~€8k/j extra · investeer 100% hiervan
+    </div>
+  </div>
+
+  <div class="move-card blue">
+    <div class="move-number">MOVE 06 · MINDSET-MOVE</div>
+    <div class="move-title">ETF-keuze: breed, goedkoop, consistent</div>
+    <div class="move-body">
+      7% rendement is de historische gemiddelde van de wereldindex. Dit bereik je met <strong>MSCI World of FTSE All-World ETF's</strong> bij een goedkope broker (DEGIRO, Trade Republic). Kosten maken een enorm verschil: een ETF met 0.07% TER vs 0.50% TER scheelt je op 23 jaar <strong>€25.000+</strong>. Geen stockpicking, geen timing — gewoon maandelijks automatisch bijkopen.
+    </div>
+    <span class="move-impact impact-blue">TER 0.07% vs 0.5% = €25k+ verschil op 23 jaar</span>
+    <div class="move-detail">
+      Aanbevolen: VWCE (Vanguard All-World) · iShares Core MSCI World (IWDA) · automatisch maandelijks bij Trade Republic of DEGIRO
+    </div>
+  </div>
+
+</div>
+
+<!-- REALITY CHECK -->
+<div class="section-title">Realiteitscheck</div>
+<div class="section-sub">Is dit plan realistisch? Eerlijk antwoord op 6 kritische vragen</div>
+
+<div class="reality-grid">
+  <div class="reality-card">
+    <div class="reality-icon">💼</div>
+    <div class="reality-head">Inkomen — realistisch?</div>
+    <div class="reality-body">Ja. €2.200 start als IT'er in België is conservatief — markt zit dichter bij €2.400–2.700 in 2026. Freelance op 30 @ €4.500/m is <strong>zeker haalbaar</strong> met 9 jaar ervaring. €5.500 op 40 is eerder de onderkant voor een senior freelancer.</div>
+    <div class="reality-score">
+      <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot half"></div>
+    </div>
+    <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:4px;">4.5/5 — Conservatief geschat</div>
+  </div>
+
+  <div class="reality-card">
+    <div class="reality-icon">📈</div>
+    <div class="reality-head">7% ETF rendement — realistisch?</div>
+    <div class="reality-body">Over lange termijn (20+ jaar) is 7% het historisch gemiddelde na inflatie voor een MSCI World. Kortere periodes variëren sterk. Je bent <strong>jong genoeg</strong> om crashes te absorberen. 6% is conservatiever; 8% is ook gezien. Plan houdt stand bij 5.5%+.</div>
+    <div class="reality-score">
+      <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div>
+    </div>
+    <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:4px;">5/5 — Goed onderbouwd</div>
+  </div>
+
+  <div class="reality-card">
+    <div class="reality-icon">🏠</div>
+    <div class="reality-head">Huis €350k in Mechelen — realistisch?</div>
+    <div class="reality-body">In 2026 is €350k voor een degelijke woning in Mechelen aan de onderkant. Rijhuizen starten al rond €280–320k, maar een halfopen bebouwing of groter huis zit al op €380–450k. <strong>Overweeg €400k budget</strong> of zoek verder van centrum. Dit kan je eigen inbreng verhogen tot €70k.</div>
+    <div class="reality-score">
+      <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot half"></div><div class="dot"></div>
+    </div>
+    <div style="font-size:10px;color:var(--amber);font-family:var(--mono);margin-top:4px;">3.5/5 — Licht optimistisch</div>
+  </div>
+
+  <div class="reality-card">
+    <div class="reality-icon">🧘</div>
+    <div class="reality-head">Langer thuis wonen tot 27 — realistisch?</div>
+    <div class="reality-body">Sociaal haalbaar, maar vraagt <strong>sterke discipline en goede thuissituatie</strong>. 80% investeren van je loon terwijl vrienden een appartement huren of kopen is mentaal zwaar. Tip: sluit een formeel spaarakkoord met jezelf. Visualiseer dagelijks je FIRE-leeftijd. Het is 6 jaar offeren voor 20+ jaar vrijheid.</div>
+    <div class="reality-score">
+      <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div>
+    </div>
+    <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:4px;">4/5 — Realistisch met discipline</div>
+  </div>
+
+  <div class="reality-card">
+    <div class="reality-icon">💑</div>
+    <div class="reality-head">Levensgebeurtenissen — risico?</div>
+    <div class="reality-body">Partner, kinderen, ziekte — dit plan is <strong>single-scenario</strong>. Een kind kost realistisch €500–800/m extra in de eerste jaren. Een partner met inkomen is pure versneller (+€2.000+/m potentieel). Rekening houden met buffer van €15k–20k voor onverwachte kosten is verstandig.</div>
+    <div class="reality-score">
+      <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div style="font-size:10px;color:var(--amber);font-family:var(--mono);margin-top:4px;">3/5 — Variabel, ingebouwde buffer nodig</div>
+  </div>
+
+  <div class="reality-card">
+    <div class="reality-icon">🏁</div>
+    <div class="reality-head">FIRE op 44 — écht stoppen?</div>
+    <div class="reality-body">€973k portfolio bij 4% uitname = €38.9k/jaar. Comfortabel voor een single, krap met gezin. Maar <strong>FIRE betekent niet noodzakelijk stoppen</strong> — het betekent vrijheid om te kiezen. De meeste FIRE-bereikikers blijven deeltijds werken of starten iets passioneel. Pensioen dan als extra buffer bovenop.</div>
+    <div class="reality-score">
+      <div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot filled"></div><div class="dot half"></div>
+    </div>
+    <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:4px;">4.5/5 — Zeer sterk plan</div>
+  </div>
+</div>
+
+<!-- RISK TABLE -->
+<div class="section-title" style="margin-bottom:16px;">Risico's & mitigaties</div>
+<table class="risk-table">
+  <thead>
+    <tr>
+      <th>Risico</th>
+      <th>Impact</th>
+      <th>Kans</th>
+      <th>Mitigatie</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><div class="risk-label">Vastgoedmarkt stijgt verder</div><div class="risk-desc">€350k wordt €420k+ tegen 2028–2031</div></td>
+      <td><span class="tag tag-high">HOOG</span></td>
+      <td><span class="tag tag-high">HOOG</span></td>
+      <td style="font-size:12px;font-weight:300;">Spaar naar €80k inbreng ipv €60k. Of kies goedkopere regio. Of koop eerder (25) en accepteer krappe fase.</td>
+    </tr>
+    <tr>
+      <td><div class="risk-label">Beurscrash op slecht moment</div><div class="risk-desc">-40% crash jaar voor FIRE rikt plan op</div></td>
+      <td><span class="tag tag-high">HOOG</span></td>
+      <td><span class="tag tag-med">MID</span></td>
+      <td style="font-size:12px;font-weight:300;">FIRE-datum flexibel houden (±3 jaar). Dollar-cost averaging dempt instap-risico. Historisch herstelt markt binnen 3–7 jaar.</td>
+    </tr>
+    <tr>
+      <td><div class="risk-label">Ziekte of arbeidsongeschiktheid</div><div class="risk-desc">Als zelfstandige geen automatische bescherming</div></td>
+      <td><span class="tag tag-high">HOOG</span></td>
+      <td><span class="tag tag-low">LAAG</span></td>
+      <td style="font-size:12px;font-weight:300;">Verzeker arbeidsongeschiktheid als zelfstandige. Kosten ~€80–120/m maar onmisbaar. Noodfonds 6 maanden kosten apart houden.</td>
+    </tr>
+    <tr>
+      <td><div class="risk-label">Belastingwijzigingen België</div><div class="risk-desc">Meerwaardebelasting op ETF's of vermogensbelasting</div></td>
+      <td><span class="tag tag-med">MID</span></td>
+      <td><span class="tag tag-med">MID</span></td>
+      <td style="font-size:12px;font-weight:300;">Plan houdt stand bij 15% belasting op meerwaarde. Spreid: mix ETF + vastgoed + pensioensparen (TAK21/23). Maxi pensioensparen eerste prioriteit.</td>
+    </tr>
+    <tr>
+      <td><div class="risk-label">Lifestyle creep</div><div class="risk-desc">Uitgaven stijgen mee met inkomen</div></td>
+      <td><span class="tag tag-med">MID</span></td>
+      <td><span class="tag tag-high">HOOG</span></td>
+      <td style="font-size:12px;font-weight:300;">Automatisch investeren bij elke loonsverhoging VOOR je het ziet. Budget-app (YNAB). Maandelijkse netto-worth tracking. Community (FIRE-forums).</td>
+    </tr>
+    <tr>
+      <td><div class="risk-label">Partner/kinderen wijzigt plan</div><div class="risk-desc">Dubbele woonruimte, kinderopvang, minder inkomen</div></td>
+      <td><span class="tag tag-med">MID</span></td>
+      <td><span class="tag tag-med">MID</span></td>
+      <td style="font-size:12px;font-weight:300;">Partner met inkomen = accelerator. Kinderen: FIRE-leeftijd schuift 2–3 jaar op. Plan is robuust genoeg om dit op te vangen. Herbereken dan.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- SUMMARY BOX -->
+<div class="summary-box">
+  <div class="sum-head">Het eerlijke totaalvonnis</div>
+  <div class="sum-cols">
+    <div>
+      <div class="sum-col-title">Wat je moet doen</div>
+      <div class="sum-item"><span class="check">✓</span><span>Thuis wonen <strong>tot 27</strong> — niet onderhandelen</span></div>
+      <div class="sum-item"><span class="check">✓</span><span>Freelance stap zetten op <strong>30</strong>, niet 35</span></div>
+      <div class="sum-item"><span class="check">✓</span><span>Niche specialisatie kiezen <strong>vóór 28</strong></span></div>
+      <div class="sum-item"><span class="check">✓</span><span>80% investeren is <strong>non-negotiable</strong> in spaarfase</span></div>
+      <div class="sum-item"><span class="check">✓</span><span>VWCE/IWDA automatisch maandelijks bijkopen</span></div>
+      <div class="sum-item"><span class="check">✓</span><span>Noodfonds €15–20k <strong>altijd apart</strong> houden</span></div>
+    </div>
+    <div>
+      <div class="sum-col-title">Wat je moet vermijden</div>
+      <div class="sum-item"><span class="cross">✗</span><span>Huis kopen op <strong>23</strong> — inkomen te laag</span></div>
+      <div class="sum-item"><span class="cross">✗</span><span>Dure auto in je 20s aanschaffen</span></div>
+      <div class="sum-item"><span class="cross">✗</span><span>Wachten op "perfecte timing" bij ETF</span></div>
+      <div class="sum-item"><span class="cross">✗</span><span>Stockpicking en crypto als FIRE-basis</span></div>
+      <div class="sum-item"><span class="cross">✗</span><span>Lifestyle laten groeien bij elke loonsverhoging</span></div>
+      <div class="sum-item"><span class="cross">✗</span><span>Als zelfstandige <strong>zonder AO-verzekering</strong></span></div>
+    </div>
+    <div>
+      <div class="sum-col-title">Eindvonnis</div>
+      <div class="sum-item" style="border:none;display:block;padding:0;">
+        <span style="font-size:13px;line-height:1.7;color:#ccc;font-weight:300;">
+          Dit is een <strong style="color:#fff;">uitstekend en realistisch FIRE-plan</strong>. De combinatie van jong starten, lage kosten bewaken, en vroeg freelancen is precies de formule die IT'ers naar FIRE brengt.<br><br>
+          Het plan is <strong style="color:#fff;">niet makkelijk</strong> — 6 jaar thuis wonen terwijl vrienden op kamers zitten vraagt karakter. Maar de reward is enorm: <strong style="color:var(--green-mid);">FIRE op 44</strong> i.p.v. wachten op pensioen op 67.<br><br>
+          <strong style="color:#fff;">Dit is jouw speelveld: start nú.</strong>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// ─────────────────────────── CALCULATIONS ───────────────────────────
+
+const RATE = 0.07;
+const FIRE_TARGET = 900000;
+
+// Income brackets (annual net)
+function income(age) {
+  if (age < 25) return 26400;
+  if (age < 30) return 36000;
+  if (age < 35) return 45600;
+  if (age < 40) return 54000;
+  return 66000;
+}
+
+// Freelance income (goes faster)
+function incomeFreelance30(age) {
+  if (age < 25) return 26400;
+  if (age < 30) return 36000;
+  if (age < 32) return 54000;   // freelance at 30 → €4.500/m
+  if (age < 40) return 66000;   // specialist by 32 → €5.500
+  return 78000;                 // top at 40 → €6.500
+}
+
+const MORTGAGE_ANNUAL = 1572 * 12; // 18864
+
+function livingCosts(age) {
+  if (age < 30) return 16800;
+  if (age < 35) return 18000;
+  if (age < 40) return 21600;
+  return 24000;
+}
+
+function totalCosts(age, hasHouse, noMortgage) {
+  if (!hasHouse) return 7000;
+  const lc = livingCosts(age);
+  return lc + (noMortgage ? 0 : MORTGAGE_ANNUAL);
+}
+
+// Build portfolio series for a scenario
+function buildScenario(buyAge, incomeFn) {
+  let portfolio = 15000;
+  let hasHouse = false;
+  let fireAge = null;
+  const series = {}; // age → portfolio
+
+  for (let age = 21; age <= 60; age++) {
+    const inc = incomeFn(age);
+    let invest;
+
+    if (!hasHouse && age < buyAge) {
+      invest = inc * 0.80;
+      portfolio = portfolio * (1 + RATE) + invest;
+    } else if (age === buyAge && !hasHouse) {
+      // Buy house: deduct 60k
+      const beforeBuy = portfolio * (1 + RATE) + inc * 0.80;
+      portfolio = beforeBuy - 60000;
+      hasHouse = true;
+      // Calculate remaining invest this year
+      const costs = totalCosts(age, true, age >= 50);
+      invest = Math.max(0, inc - costs);
+      portfolio = (beforeBuy - 60000) * (1 + RATE) + invest;
+      // Simplified: just set portfolio = afterBuy compounded
+      portfolio = (beforeBuy - 60000);
+    } else {
+      const noMort = age >= (buyAge + 25);
+      const costs = totalCosts(age, hasHouse, noMort);
+      invest = Math.max(0, inc - costs);
+      portfolio = portfolio * (1 + RATE) + invest;
+    }
+
+    series[age] = Math.round(portfolio);
+    if (!fireAge && portfolio >= FIRE_TARGET) fireAge = age;
+  }
+  return { series, fireAge };
+}
+
+// Scenario A: buy 25, loondienst 35
+const A = buildScenario(25, income);
+
+// Scenario B: buy 27, loondienst 35
+function incomeB(age) { return income(age); }
+const B = buildScenario(27, incomeB);
+
+// Scenario C: buy 25, freelance 30
+const C = buildScenario(25, incomeFreelance30);
+
+// Scenario D: buy 27, freelance 30 (OPTIMAL)
+const D = buildScenario(27, incomeFreelance30);
+
+// ─────────────────────────── SCENARIO CARDS ───────────────────────────
+const scenarios = [
+  { letter: 'A', title: 'Basis', sub: 'Koop 25 · Loondienst 35', obj: A, color: '#c0392b', cls: 'gain-red' },
+  { letter: 'B', title: '2 jaar\nlanger thuis', sub: 'Koop 27 · Loondienst 35', obj: B, color: '#1a4f8a', cls: 'gain-blue' },
+  { letter: 'C', title: 'Eerder\nfreelance', sub: 'Koop 25 · Freelance 30', obj: C, color: '#c87800', cls: 'gain-amber' },
+  { letter: 'D', title: 'Optimaal\nscenario', sub: 'Koop 27 · Freelance 30', obj: D, color: '#0f7a5a', cls: 'gain-green', winner: true },
+];
+
+const grid = document.getElementById('scenarioGrid');
+scenarios.forEach(s => {
+  const fireAge = s.obj.fireAge || '55+';
+  const portfolio50 = s.obj.series[50] || 0;
+  const gainVsA = s.letter === 'A' ? '' :
+    `+${A.fireAge ? (A.fireAge - (s.obj.fireAge || 56)) : 0} jaar eerder`;
+
+  const card = document.createElement('div');
+  card.className = 'sc-card' + (s.winner ? ' winner' : '');
+  card.innerHTML = `
+    <div class="sc-letter">Scenario ${s.letter}</div>
+    <div class="sc-title">${s.title.replace('\n','<br>')}</div>
+    <div class="sc-row">
+      <span class="sc-key">Koopt huis</span>
+      <span class="sc-val">${s.sub.split('·')[0].trim()}</span>
+    </div>
+    <div class="sc-row">
+      <span class="sc-key">Freelance</span>
+      <span class="sc-val">${s.sub.split('·')[1].trim()}</span>
+    </div>
+    <div class="fire-age">${fireAge}</div>
+    <div class="fire-age-label">FIRE leeftijd</div>
+    <div class="sc-row" style="margin-top:8px;">
+      <span class="sc-key">Portfolio @50</span>
+      <span class="sc-val" style="color:${s.color};">€${Math.round(portfolio50/1000)}k</span>
+    </div>
+    ${s.letter !== 'A' ? `<div class="gain-badge ${s.cls}" style="margin-top:8px;">${A.fireAge - (s.obj.fireAge||56)} jaar vroeger dan basis</div>` : '<div class="gain-badge gain-red" style="margin-top:8px;">Referentie</div>'}
+  `;
+  grid.appendChild(card);
+});
+
+// ─────────────────────────── CHART 1: Comparison ───────────────────────────
+const ages = [];
+for (let a = 25; a <= 55; a++) ages.push(a);
+
+const ctx1 = document.getElementById('chartCompare').getContext('2d');
+new Chart(ctx1, {
+  type: 'line',
+  data: {
+    labels: ages.map(a => `${a}j`),
+    datasets: [
+      {
+        label: 'A: Basis',
+        data: ages.map(a => A.series[a]),
+        borderColor: '#c0392b',
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0.3,
+        fill: false,
+        borderDash: [4, 4],
+      },
+      {
+        label: 'B: Langer thuis',
+        data: ages.map(a => B.series[a]),
+        borderColor: '#1a4f8a',
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0.3,
+        fill: false,
+      },
+      {
+        label: 'C: Freelance 30',
+        data: ages.map(a => C.series[a]),
+        borderColor: '#c87800',
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0.3,
+        fill: false,
+      },
+      {
+        label: 'D: Optimaal',
+        data: ages.map(a => D.series[a]),
+        borderColor: '#0f7a5a',
+        backgroundColor: 'rgba(15,122,90,0.06)',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        tension: 0.3,
+        fill: true,
+      },
+      {
+        label: 'FIRE €900k',
+        data: ages.map(() => 900000),
+        borderColor: 'rgba(0,0,0,0.2)',
+        borderDash: [8, 4],
+        borderWidth: 1,
+        pointRadius: 0,
+        fill: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: '#888', font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 14, padding: 12 }
+      },
+      tooltip: {
+        callbacks: { label: ctx => `${ctx.dataset.label}: €${Math.round(ctx.raw/1000)}k` }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#aaa', font: { family: 'IBM Plex Mono', size: 9 } },
+        grid: { color: '#e8e0d0' }
+      },
+      y: {
+        ticks: {
+          color: '#aaa',
+          font: { family: 'IBM Plex Mono', size: 9 },
+          callback: v => `€${v/1000}k`
+        },
+        grid: { color: '#e8e0d0' }
+      }
+    }
+  }
+});
+
+// ─────────────────────────── CHART 2: Impact per move ───────────────────────────
+const ctx2 = document.getElementById('chartImpact').getContext('2d');
+new Chart(ctx2, {
+  type: 'bar',
+  data: {
+    labels: ['Thuis\ntot 27', 'Freelance\nop 30', 'Combinatie\n(D vs A)', 'Niche\n+€500/m', 'Kamer\nverhuren'],
+    datasets: [{
+      label: 'Jaren gewonnen t.o.v. basis',
+      data: [
+        A.fireAge - B.fireAge,
+        A.fireAge - C.fireAge,
+        A.fireAge - D.fireAge,
+        2,
+        1.5
+      ],
+      backgroundColor: ['#1a4f8a', '#c87800', '#0f7a5a', '#0f7a5a', '#0f7a5a'],
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: ctx => `${ctx.raw} jaar eerder FIRE` }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#aaa', font: { family: 'IBM Plex Mono', size: 9 },
+          callback: v => `${v}j`
+        },
+        grid: { color: '#e8e0d0' }
+      },
+      y: {
+        ticks: { color: '#666', font: { family: 'IBM Plex Mono', size: 9 } },
+        grid: { display: false }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
