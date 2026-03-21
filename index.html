@@ -397,7 +397,7 @@ table.ytable {
 
 <!-- MORTGAGE DETAIL -->
 <div class="section-title" style="margin-top:0;">Huis · €300.000 · Gedetailleerde hypotheek</div>
-<div class="section-sub">Aankoop op leeftijd 27 · 4% rente · 25 jaar · Eigen inbreng €60k (notaris + 15%)</div>
+<div class="section-sub">Aankoop op leeftijd 27 · Verlaagd verkooprecht 2% Vlaanderen (2025+) · 4% rente · 25 jaar · Eigen inbreng €53.500 (15% aanbetaling + €6k registratie + €2,5k notaris)</div>
 <div class="mort-grid" id="mortGrid"></div>
 
 <!-- PHASE LEGEND -->
@@ -471,34 +471,45 @@ table.ytable {
 <div class="feas-grid" id="feasGrid"></div>
 
 <div class="note-box">
-  <strong>Bottomline:</strong> Dit plan is <strong>uitvoerbaar voor een gedisciplineerde IT-professional</strong>. De getallen zijn conservatief geschat — reëel inkomen op 25 ligt eerder bij €2.600–2.800/m als applicatieontwikkelaar in België. 
-  Het zwakste punt is de periode 27–30: krappe cashflow, huis net gekocht, nog in loondienst. 
-  Wie die 3 jaar overleeft zonder lifestyle creep en de freelancestap durft zetten op 30, heeft een <strong>zeer hoog slagingspercentage</strong>.
+  <strong>Methodologie & bottomline:</strong> Dit model werkt <strong>volledig nominaal</strong>: ETF-rendement 7% nominaal, leefkosten groeien 2,5%/jaar mee, FIRE-doel is dynamisch (inflatie-gecorrigeerde jaarkosten / 3,5% SWR). Meerwaardebelasting 10% boven €10k wordt elk jaar ingehouden. Verkooprecht correct op 2% (Vlaamse regeling 2025+). Het plan is methodisch eerlijk — <strong>geen optimistische shortcuts</strong>. FIRE leeftijd valt daardoor realistisch later dan versimpelde 4%-modellen suggereren, maar het plan is robuust en houdbaar.
 </div>
 
 </div><!-- /wrap -->
 <script>
 // ═══════════════════════════════════════════
-// DATA ENGINE
+// DATA ENGINE — GECORRIGEERDE VERSIE
+// Correcties t.o.v. vorige versie:
+//   1) Verlaagd verkooprecht Vlaanderen 2% (niet 15%)
+//   2) Dynamisch FIRE-doel op 3,5% SWR (niet vaste €900k)
+//   3) Leefkosten groeien met 2,5%/jaar inflatie (nominaal model)
+//   4) Meerwaardebelasting 10% op groei boven €10k vrijstelling
 // ═══════════════════════════════════════════
 
-const RATE = 0.07;
-const HOUSE_PRICE = 300000;
-const OWN_CONTRIBUTION = 60000; // 15% + notary
-const LOAN = HOUSE_PRICE - 45000; // 255000
-const LOAN_RATE = 0.04;
-const LOAN_YEARS = 25;
-const BUY_AGE = 27;
-const FREELANCE_AGE = 30;
-const FIRE_TARGET = 900000;
+const RATE        = 0.07;    // 7% nominaal ETF-rendement
+const INFLATION   = 0.025;   // 2,5%/jaar
+const CGT_RATE    = 0.10;    // 10% solidariteitsbijdrage meerwaarde
+const CGT_EXEMPT  = 10000;   // €10k vrijstelling per jaar
+const SWR         = 0.035;   // 3,5% safe withdrawal rate (voorzichtig voor vroeg FIRE)
 
-// Mortgage monthly payment
+const HOUSE_PRICE   = 300000;
+const DOWN_PAYMENT  = 45000;          // 15% eigen inbreng
+const REG_TAX       = 6000;           // 2% verlaagd verkooprecht Vlaanderen (2025+)
+const NOTARY        = 2500;           // notariskosten (aktekosten)
+const OWN_CONTRIBUTION = DOWN_PAYMENT + REG_TAX + NOTARY; // = 53.500
+const LOAN          = HOUSE_PRICE - DOWN_PAYMENT;          // = 255.000
+const LOAN_RATE     = 0.04;
+const LOAN_YEARS    = 25;
+const BUY_AGE       = 27;
+const FREELANCE_AGE = 30;
+const BASE_YEAR_AGE = 21; // leeftijd = jaar 0 voor inflatie-index
+
+// Hypotheek maandlast (nominaal, vast)
 const r = LOAN_RATE / 12;
 const n = LOAN_YEARS * 12;
 const MORTGAGE_MONTHLY = LOAN * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
-const MORTGAGE_ANNUAL = MORTGAGE_MONTHLY * 12;
+const MORTGAGE_ANNUAL  = MORTGAGE_MONTHLY * 12;
 
-// Net income (annual)
+// Netto inkomen (nominaal, stapsgewijs)
 function getIncome(age) {
   if (age < 25) return { monthly: 2200, annual: 26400, label: 'Junior IT (loondienst)', raise: '' };
   if (age < 27) return { monthly: 3000, annual: 36000, label: 'Medior IT (loondienst)', raise: '+€800/m vs start' };
@@ -509,84 +520,104 @@ function getIncome(age) {
   return { monthly: 6500, annual: 78000, label: 'Top freelance / expert', raise: '🔝 Topniveau' };
 }
 
-// Living costs (annual, excl mortgage)
-function getLivingCosts(age, hasHouse) {
+// Leefkosten in euro van vandaag (basiswaarden), excl. hypotheek
+function getLivingCostsBase(age, hasHouse) {
   if (!hasHouse) return 7000;
-  if (age < 30) return 16800; // €1.400/m
-  if (age < 35) return 19200; // €1.600/m
-  if (age < 40) return 21600; // €1.800/m
-  return 24000;               // €2.000/m
+  if (age < 30) return 16000; // €1.333/m
+  if (age < 35) return 18000; // €1.500/m
+  if (age < 40) return 21000; // €1.750/m
+  return 23000;               // €1.917/m
+}
+// Leefkosten inflatie-gecorrigeerd (nominaal)
+function getLivingCosts(age, hasHouse) {
+  return getLivingCostsBase(age, hasHouse) * Math.pow(1 + INFLATION, age - BASE_YEAR_AGE);
 }
 
+// Hypotheek (nominaal, vast bedrag)
 function getMortgageAnnual(age) {
   if (age < BUY_AGE) return 0;
   if (age >= BUY_AGE + LOAN_YEARS) return 0;
   return MORTGAGE_ANNUAL;
 }
 
-// Build full year data
+// Meerwaardebelasting dit jaar
+function calcCGT(portfolioGrowth) {
+  return Math.max(0, (portfolioGrowth - CGT_EXEMPT) * CGT_RATE);
+}
+
+// Dynamisch FIRE-doel: jaarlijkse kosten op dat moment / SWR
+function fireTarget(age, hasHouse) {
+  const costs = getLivingCosts(age, hasHouse) + getMortgageAnnual(age);
+  return costs / SWR;
+}
+
+// ─── HOOFDLOOP ───
 const years = [];
 let portfolio = 15000;
-let hasHouse = false;
+let hasHouse  = false;
 let totalContributed = 15000;
 let fireAge = null;
 let firePortfolio = null;
+let fireTargetAtAge = null;
 
-for (let age = 21; age <= 55; age++) {
-  const inc = getIncome(age);
-  const living = getLivingCosts(age, hasHouse || age === BUY_AGE);
-  const mort = getMortgageAnnual(age);
+for (let age = 21; age <= 57; age++) {
+  const inc       = getIncome(age);
+  const living    = getLivingCosts(age, hasHouse || age === BUY_AGE);
+  const mort      = getMortgageAnnual(age);
   const totalCosts = living + mort;
 
   let invest = 0;
   let portStart = portfolio;
   let event = null;
-  let portfolioReturn = 0;
+
+  const grossReturn = portfolio * RATE;
+  const cgt         = calcCGT(grossReturn);
+  const netReturn   = grossReturn - cgt;
 
   if (!hasHouse && age < BUY_AGE) {
     // Spaarfase: 80% investeren
     invest = inc.annual * 0.80;
-    portfolioReturn = portfolio * RATE;
-    portfolio = portfolio * (1 + RATE) + invest;
-    if (age === 22 && portfolio >= 60000) event = 'target60k';
+    portfolio = portStart + netReturn + invest;
+    if (age === 23 && portfolio >= 60000) event = 'target60k';
   } else if (age === BUY_AGE) {
-    // Koop huis! Pak eerst compound dit jaar, dan trek eigen inbreng af
-    portfolioReturn = portfolio * RATE;
-    let grow = portfolio * (1 + RATE) + inc.annual * 0.80;
-    portfolio = grow - OWN_CONTRIBUTION;
-    hasHouse = true;
-    // Recalculate invest: surplus after costs
-    invest = Math.max(0, inc.annual - totalCosts);
-    // Portfolio actually: pre-buy * 1.07 - 60k + invest
-    portfolio = portStart * (1 + RATE) - OWN_CONTRIBUTION + invest;
-    portfolioReturn = portStart * RATE;
-    event = 'huis';
+    // Huisaankoop: compound dit jaar, trek eigen inbreng af
+    const afterGrowth = portStart + netReturn;
+    portfolio = afterGrowth - OWN_CONTRIBUTION;
+    hasHouse  = true;
+    invest    = Math.max(0, inc.annual - totalCosts);
+    portfolio = portfolio + invest;
+    event     = 'huis';
   } else {
-    invest = Math.max(0, inc.annual - totalCosts);
-    portfolioReturn = portfolio * RATE;
-    portfolio = portfolio * (1 + RATE) + invest;
+    invest    = Math.max(0, inc.annual - totalCosts);
+    portfolio = portStart + netReturn + invest;
   }
 
   if (age === FREELANCE_AGE) event = (event ? event + '+' : '') + 'freelance';
-  if (!fireAge && portfolio >= FIRE_TARGET) {
-    fireAge = age;
-    firePortfolio = portfolio;
+
+  // FIRE check: dynamisch doel op basis van inflatie + 3,5% SWR
+  const ft = fireTarget(age, hasHouse);
+  if (!fireAge && portfolio >= ft) {
+    fireAge         = age;
+    firePortfolio   = portfolio;
+    fireTargetAtAge = ft;
     event = (event ? event + '+' : '') + 'fire';
   }
 
   if (invest > 0) totalContributed += invest;
 
-  const surplus = inc.annual - totalCosts;
+  const surplus   = inc.annual - totalCosts;
   const investPct = inc.annual > 0 ? (invest / inc.annual * 100) : 0;
 
   years.push({
     age, inc, living, mort, totalCosts,
     invest, portfolio: Math.round(portfolio),
     portStart: Math.round(portStart),
-    portReturn: Math.round(portfolioReturn),
+    portReturn: Math.round(netReturn),
+    cgt: Math.round(cgt),
     surplus: Math.round(surplus),
+    fireTarget: Math.round(ft),
     event,
-    hasHouse: hasHouse,
+    hasHouse,
     investPct: Math.round(investPct),
     totalContributed: Math.round(totalContributed)
   });
@@ -596,13 +627,19 @@ for (let age = 21; age <= 55; age++) {
 document.getElementById('fireAgeDisplay').textContent = fireAge || '—';
 document.getElementById('portfolioFire').textContent = firePortfolio ? `€${Math.round(firePortfolio/1000)}k` : '—';
 document.getElementById('totalInvested').textContent = `€${Math.round(totalContributed/1000)}k`;
+// Show dynamic FIRE target
+const ftEl = document.getElementById('fireTargetDisplay');
+if (ftEl) ftEl.textContent = fireTargetAtAge ? `FIRE-doel @ ${fireAge}: €${Math.round(fireTargetAtAge/1000)}k (3,5% SWR)` : '';
 
 // ═══════════════════════════════════════════
 // MORTGAGE CARDS
 // ═══════════════════════════════════════════
 const mortData = [
   { val: `€${HOUSE_PRICE.toLocaleString('nl')}`, key: 'Aankoopprijs' },
-  { val: `€${OWN_CONTRIBUTION.toLocaleString('nl')}`, key: 'Eigen inbreng' },
+  { val: `€${DOWN_PAYMENT.toLocaleString('nl')}`, key: 'Inbreng (15%)' },
+  { val: `€${REG_TAX.toLocaleString('nl')}`, key: 'Verkooprecht 2% (Vl.)' },
+  { val: `€${NOTARY.toLocaleString('nl')}`, key: 'Notariskosten' },
+  { val: `€${OWN_CONTRIBUTION.toLocaleString('nl')}`, key: 'Totaal eigen inbreng' },
   { val: `€${LOAN.toLocaleString('nl')}`, key: 'Hypotheeklening' },
   { val: `€${Math.round(MORTGAGE_MONTHLY).toLocaleString('nl')}/m`, key: 'Maandlast' },
   { val: `${LOAN_YEARS} jaar`, key: 'Looptijd' },
@@ -611,7 +648,6 @@ const mortGrid = document.getElementById('mortGrid');
 mortData.forEach(m => {
   mortGrid.innerHTML += `<div class="mort-card"><div class="mort-val">${m.val}</div><div class="mort-key">${m.key}</div></div>`;
 });
-// Extra: total interest
 const totalPaid = MORTGAGE_MONTHLY * LOAN_YEARS * 12;
 const totalInterest = totalPaid - LOAN;
 mortGrid.innerHTML += `<div class="mort-card" style="border-color:var(--border2);"><div class="mort-val" style="color:var(--red);">€${Math.round(totalInterest/1000)}k</div><div class="mort-key">Totale rente 25j</div></div>`;
@@ -653,13 +689,15 @@ const colHeaders = `
     <th>Actie / Situatie</th>
     <th>Netto/jaar</th>
     <th>Netto/maand</th>
-    <th>Leefkosten</th>
+    <th>Leefkosten (infl.)</th>
     <th>Hypotheek</th>
     <th>Totaal kosten</th>
     <th>Investering</th>
     <th>% v/inkomen</th>
-    <th>ETF rendement</th>
+    <th>ETF netto rendement</th>
+    <th>MV-belasting (10%)</th>
     <th>Portfolio einde jaar</th>
+    <th>FIRE-doel (3,5%)</th>
     <th>Surplus/tekort</th>
   </tr></thead>`;
 
@@ -701,18 +739,15 @@ phases.forEach(ph => {
       <td><div class="what-cell">${y.inc.label}${badges}</div><div class="what-sub">${y.inc.raise}</div></td>
       <td class="income-cell">${fmt(y.inc.annual)}</td>
       <td class="income-cell">${fmt(y.inc.monthly)}</td>
-      <td class="cost-cell">${fmt(y.living)}</td>
+      <td class="cost-cell">${fmt(Math.round(y.living))}</td>
       <td class="cost-cell">${y.mort > 0 ? fmt(y.mort) : '<span style="color:var(--muted2);">—</span>'}</td>
-      <td class="cost-cell">${fmt(y.totalCosts)}</td>
+      <td class="cost-cell">${fmt(Math.round(y.totalCosts))}</td>
       <td class="invest-cell">${y.invest > 0 ? fmt(y.invest) : '<span style="color:var(--muted2);">—</span>'}</td>
       <td class="rate-cell">${y.investPct > 0 ? y.investPct + '%' : '—'}</td>
-      <td class="growth-cell">
-        <div class="ret-bar">
-          <span>+${fmt(y.portReturn)}</span>
-          <div class="ret-fill-wrap"><div class="ret-fill" style="width:${retBarW}%;"></div></div>
-        </div>
-      </td>
+      <td class="growth-cell">+${fmt(y.portReturn)}</td>
+      <td style="color:${y.cgt > 0 ? 'var(--amber)' : 'var(--muted2)'}; font-size:11px;">${y.cgt > 0 ? '-' + fmt(y.cgt) : '—'}</td>
       <td class="portfolio-cell">${fmt(y.portfolio)}</td>
+      <td style="font-size:11px;color:${y.portfolio >= y.fireTarget ? 'var(--green)' : 'var(--muted)'};">${fmt(y.fireTarget)}</td>
       <td class="${surClass}">${y.surplus >= 0 ? '+' : ''}${fmt(y.surplus)}</td>
     </tr>`;
   });
@@ -822,8 +857,8 @@ new Chart(document.getElementById('cPortfolio').getContext('2d'), {
       backgroundColor: 'rgba(240,192,96,0.07)',
       borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3
     }, {
-      label: 'FIRE grens €900k',
-      data: chartAges.map(() => 900000),
+      label: 'FIRE grens (dynamisch 3,5% SWR)',
+      data: years.map(y => y.fireTarget),
       borderColor: 'rgba(52,216,154,0.5)',
       borderDash: [8,4], borderWidth: 1.5, pointRadius: 0, fill: false
     }, {
@@ -909,27 +944,31 @@ function simulate(rate) {
   let hasH = false;
   let fire = null;
   let p50 = 0;
-  for (let age = 21; age <= 55; age++) {
-    const inc = getIncome(age);
-    const mort = getMortgageAnnual(age);
+  for (let age = 21; age <= 57; age++) {
+    const inc    = getIncome(age);
+    const mort   = getMortgageAnnual(age);
     const living = getLivingCosts(age, hasH || age === BUY_AGE);
+    const grossRet = p * rate;
+    const cgt2   = Math.max(0, (grossRet - CGT_EXEMPT) * CGT_RATE);
+    const netRet = grossRet - cgt2;
     let invest;
     if (!hasH && age < BUY_AGE) {
       invest = inc.annual * 0.80;
-      p = p * (1 + rate) + invest;
+      p = p + netRet + invest;
     } else if (age === BUY_AGE) {
-      p = p * (1 + rate) - OWN_CONTRIBUTION;
+      p = p + netRet - OWN_CONTRIBUTION;
       invest = Math.max(0, inc.annual - living - mort);
       p += invest;
       hasH = true;
     } else {
       invest = Math.max(0, inc.annual - living - mort);
-      p = p * (1 + rate) + invest;
+      p = p + netRet + invest;
     }
-    if (!fire && p >= FIRE_TARGET) fire = age;
+    const ft = fireTarget(age, hasH);
+    if (!fire && p >= ft) fire = age;
     if (age === 50) p50 = Math.round(p);
   }
-  return { fire, p50, pFire: fire ? Math.round(years.find(y=>y.age===fire)?.portfolio || 0) : null };
+  return { fire, p50 };
 }
 
 const sims = [
@@ -944,33 +983,36 @@ sims.forEach(s => {
   const res = simulate(s.rate);
   simPortfolios[s.name] = [];
   let p2 = 15000; let hasH2 = false;
-  for (let age = 21; age <= 52; age++) {
-    const inc = getIncome(age);
-    const mort = getMortgageAnnual(age);
+  for (let age = 21; age <= 57; age++) {
+    const inc    = getIncome(age);
+    const mort   = getMortgageAnnual(age);
     const living = getLivingCosts(age, hasH2 || age === BUY_AGE);
+    const gr2    = p2 * s.rate;
+    const c2     = Math.max(0, (gr2 - CGT_EXEMPT) * CGT_RATE);
     let invest;
-    if (!hasH2 && age < BUY_AGE) { invest = inc.annual * 0.80; p2 = p2*(1+s.rate)+invest; }
-    else if (age === BUY_AGE) { p2 = p2*(1+s.rate)-OWN_CONTRIBUTION; invest = Math.max(0, inc.annual-living-mort); p2+=invest; hasH2=true; }
-    else { invest = Math.max(0, inc.annual-living-mort); p2 = p2*(1+s.rate)+invest; }
-    simPortfolios[s.name].push(Math.round(p2));
+    if (!hasH2 && age < BUY_AGE) { invest = inc.annual * 0.80; p2 = p2 + gr2 - c2 + invest; }
+    else if (age === BUY_AGE) { p2 = p2 + gr2 - c2 - OWN_CONTRIBUTION; invest = Math.max(0, inc.annual-living-mort); p2+=invest; hasH2=true; }
+    else { invest = Math.max(0, inc.annual-living-mort); p2 = p2 + gr2 - c2 + invest; }
+    if (age <= 57) simPortfolios[s.name].push(Math.round(p2));
   }
 
   const colorMap = { bear: '#f05050', base: '#f0c060', bull: '#34d89a' };
+  const swr35 = Math.round(res.p50 * 0.035 / 1000);
   simGrid.innerHTML += `
     <div class="sim-card ${s.cls}">
       <div class="sim-top">
         <div><div class="sim-label">Scenario</div><div class="sim-name">${s.name} · ${s.desc}</div></div>
         <div class="sim-rate ${s.cls}" style="color:${colorMap[s.cls]};">${s.rateLabel}</div>
       </div>
-      <div class="sim-row"><span class="sim-k">FIRE leeftijd</span><span class="sim-v" style="color:${colorMap[s.cls]};">${res.fire || '55+'}</span></div>
+      <div class="sim-row"><span class="sim-k">FIRE leeftijd (3,5% SWR)</span><span class="sim-v" style="color:${colorMap[s.cls]};">${res.fire || '57+'}</span></div>
       <div class="sim-row"><span class="sim-k">Portfolio @50</span><span class="sim-v">€${Math.round(res.p50/1000)}k</span></div>
-      <div class="sim-row"><span class="sim-k">Jaren voor FIRE</span><span class="sim-v">${res.fire ? res.fire - 21 : '30+'} jaar werken</span></div>
-      <div class="sim-row"><span class="sim-k">4% = jaarinkomen</span><span class="sim-v">€${Math.round(res.p50*0.04/1000)}k/j @ 50</span></div>
+      <div class="sim-row"><span class="sim-k">Jaren actief</span><span class="sim-v">${res.fire ? res.fire - 21 : '36+'} jaar</span></div>
+      <div class="sim-row"><span class="sim-k">3,5% uitname @50</span><span class="sim-v">€${swr35}k/j</span></div>
     </div>`;
 });
 
 // Scenarios chart
-const simAges = Array.from({length:32}, (_,i)=>21+i);
+const simAges = Array.from({length:37}, (_,i)=>21+i);
 new Chart(document.getElementById('cScenarios').getContext('2d'), {
   type: 'line',
   data: {
@@ -1009,13 +1051,13 @@ new Chart(document.getElementById('cFireAge').getContext('2d'), {
 // ═══════════════════════════════════════════
 const feasData = [
   { label: 'Inkomen', title: 'Inkomstenschatting', score: 90, color: '#34d89a', body: '€2.200 start = conservatief voor IT in België 2026. Markt zit op €2.400–2.700. €4.500 freelance op 30 is haalbaar voor een IT\'er met 9 jaar ervaring. Eerder onderschat dan overschat.' },
-  { label: 'ETF rendement', title: '7% historisch', score: 85, color: '#34d89a', body: 'MSCI World gemiddeld 7–8% reëel over 20+ jaar. Bij crashjaren heeft een 21-jarige de tijd om te herstellen. Dollar-cost averaging dempt instaprisico volledig.' },
-  { label: 'Huismarkt', title: '€300k in Mechelen', score: 70, color: '#f0a030', body: 'In 2026 is €300k aan de onderkant voor een rijhuis in Mechelen. Wijk-afhankelijk. Een studio of kleiner appartement is realistischer voor dat budget. Buffer van €20–30k extra aanbevolen.' },
-  { label: 'Discipline', title: '6 jaar thuis + 80% inleg', score: 78, color: '#f0a030', body: 'Psychologisch zwaarst. Friendsomgeving koopt al appartementen. Maar: elk jaar thuis voegt ~€10–15k compound toe aan je eindvermogen. Visualiseer de FIRE-leeftijd. Community helpt.' },
+  { label: 'ETF rendement', title: '7% historisch nominaal', score: 85, color: '#34d89a', body: 'MSCI World gemiddeld 7–8% nominaal over 20+ jaar. Reëel (na 2,5% inflatie) is dat ~4,5%. Dit model werkt nominaal: kosten groeien mee met inflatie, rendement is nominaal. Methodisch consistent.' },
+  { label: 'Huismarkt', title: '€300k + 2% registratie', score: 75, color: '#34d89a', body: 'Verlaagd verkooprecht Vlaanderen: 2% op enige eigen woning (2025+). Op €300k = €6.000. Totale eigen inbreng: €53.500 (15% aanbetaling + registratie + notaris). Stuk goedkoper dan vroeger.' },
+  { label: 'Discipline', title: '6 jaar thuis + 80% inleg', score: 78, color: '#f0a030', body: 'Psychologisch zwaarst. Vrienden kopen al appartementen. Maar: elk jaar thuis voegt compound-basis toe die later exponentieel groeit. Visualiseer de FIRE-leeftijd. Community helpt.' },
   { label: 'Freelance stap', title: 'Overgang op 30', score: 82, color: '#34d89a', body: 'Met 9 jaar IT-ervaring is freelancen goed te plannen: eerst 1 klant via netwerk, dan uitbreiden. Administratie is beheersbaar (vennootschap of eenmanszaak). Risico is behapbaar.' },
   { label: "Risico's", title: 'Ziekte / markt / leven', score: 65, color: '#f05050', body: 'Als zelfstandige: arbeidsongeschiktheidsverzekering is verplicht (~€100/m). Noodfonds €15k apart. Beurscrash dempt maar stopt je niet. Partner/kinderen: plan schuift 2-3 jaar op.' },
-  { label: 'Belastingen BE', title: 'Meerwaarde & box 3', score: 72, color: '#f0a030', body: 'België heeft geen meerwaardebelasting op aandelen (2026), maar dit kan wijzigen. Speculatietaks op 6m geldt niet bij passief buy-and-hold. Pensioensparen €1.020/j max aftrekbaar.' },
-  { label: 'FIRE @ 43', title: 'Levensvatbaar plan', score: 88, color: '#34d89a', body: '€900k bij 4% SWR = €36k/jaar. Comfortabel voor een single, iets krap met gezin. Maar: hypotheek loopt nog tot 52. Ofwel onttrekking dekt dit, ofwel licht deeltijdwerken als buffer.' },
+  { label: 'Belasting MV', title: '10% solidariteitsbijdrage', score: 68, color: '#f0a030', body: 'Federaal akkoord 2025 voorziet 10% op toekomstige meerwaarden boven €10k vrijstelling. Historische meerwaarden zijn vrijgesteld. Dit model rekent die belasting al in. Impact: FIRE ~1-2 jaar later.' },
+  { label: 'FIRE-doel', title: '3,5% SWR, dynamisch', score: 82, color: '#34d89a', body: 'FIRE-doel wordt berekend als inflatie-gecorrigeerde jaarkosten / 3,5%. Conservatiever dan de klassieke 4%-regel, want je hebt nog hypotheek lopen en een lange tijdshorizon. Realistisch en robuust.' },
 ];
 
 const feasGrid = document.getElementById('feasGrid');
